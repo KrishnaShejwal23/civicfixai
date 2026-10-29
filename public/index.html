@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>CivicFix AI</title>
+  <meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="format-detection" content="telephone=no" />
+  <meta name="msapplication-tap-highlight" content="no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#10243A" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background-color: #10243A;
+      color: #FFFFFF;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+      text-align: center;
+    }
+    .logo-container {
+      width: 72px;
+      height: 72px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .logo-svg {
+      width: 100%;
+      height: 100%;
+      filter: drop-shadow(0 4px 12px rgba(16, 191, 165, 0.3));
+    }
+    h1 {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+    }
+    h1 span {
+      color: #10BFA5;
+    }
+    p {
+      font-size: 13px;
+      color: #8A94A6;
+      max-width: 280px;
+      line-height: 1.5;
+      margin-bottom: 32px;
+    }
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid rgba(16, 191, 165, 0.2);
+      border-top-color: #10BFA5;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 16px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .status-text {
+      font-size: 12px;
+      font-weight: 600;
+      color: #10BFA5;
+      letter-spacing: 0.5px;
+    }
+    .retry-btn {
+      display: none;
+      margin-top: 20px;
+      padding: 10px 24px;
+      background-color: #10BFA5;
+      color: #10243A;
+      font-size: 13px;
+      font-weight: 700;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="logo-container">
+    <svg class="logo-svg" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M24 4C14.0589 4 6 12.0589 6 22C6 32.5 21.6 43.1 23.1 44.1C23.6 44.5 24.4 44.5 24.9 44.1C26.4 43.1 42 32.5 42 22C42 12.0589 33.9411 4 24 4Z" fill="#FFFFFF"/>
+      <path d="M17 28V19C17 18.4 17.4 18 18 18H30C30.6 18 31 18.4 31 19V28" stroke="#10243A" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M18 22L22.5 26.5L34 15" stroke="#10BFA5" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="34" cy="15" r="2.5" fill="#10BFA5"/>
+    </svg>
+  </div>
+
+  <h1>CivicFix <span>AI</span></h1>
+  <p>Smarter Cities. Better Communities.</p>
+
+  <div class="spinner" id="loader"></div>
+  <div class="status-text" id="statusMsg">Connecting to Civic Services...</div>
+  <button class="retry-btn" id="retryBtn" onclick="tryConnect()">Retry Connection</button>
+
+  <script>
+    // Target backend server
+    // When running inside Android Emulator, 10.0.2.2 maps to host localhost:3000
+    // When running inside iOS Simulator, localhost:3000 maps to host
+    const isAndroid = navigator.userAgent.toLowerCase().includes('android');
+    const defaultHost = isAndroid ? 'http://10.0.2.2:3000' : 'http://localhost:3000';
+    
+    // Check if a remote host or local storage override was specified
+    const targetUrl = window.localStorage.getItem('CIVICFIX_SERVER_URL') || defaultHost;
+
+    function tryConnect() {
+      document.getElementById('loader').style.display = 'block';
+      document.getElementById('retryBtn').style.display = 'none';
+      document.getElementById('statusMsg').textContent = 'Connecting to ' + targetUrl + '...';
+
+      fetch(targetUrl + '/api/departments', { mode: 'cors', cache: 'no-store' })
+        .then(function(res) {
+          if (res.ok || res.status < 500) {
+            document.getElementById('statusMsg').textContent = 'Connected. Launching...';
+            window.location.href = targetUrl;
+          } else {
+            throw new Error('Server returned ' + res.status);
+          }
+        })
+        .catch(function(err) {
+          document.getElementById('loader').style.display = 'none';
+          document.getElementById('statusMsg').textContent = 'Unable to reach CivicFix backend at ' + targetUrl;
+          document.getElementById('retryBtn').style.display = 'inline-block';
+        });
+    }
+
+    // Auto-connect after brief splash display
+    setTimeout(tryConnect, 600);
+  </script>
+</body>
+</html>
